@@ -1,26 +1,147 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+html, body {
+  background: #07070f;
+  color: #e2e8f0;
+  font-family: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+::selection {
+  background: rgba(99,102,241,0.28);
+  color: #e2e8f0;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: #07070f; }
+::-webkit-scrollbar-thumb { background: #1e1e3a; border-radius: 2px; }
+
+/* ── keyframes ──────────────────────────────────────── */
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+@keyframes shimmer-text {
+  0%   { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-7px); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(99,102,241,0.12); }
+  50%       { box-shadow: 0 0 48px rgba(99,102,241,0.30), 0 0 90px rgba(99,102,241,0.06); }
+}
+
+@keyframes glow-pulse-amber {
+  0%, 100% { box-shadow: 0 0 24px rgba(245,158,11,0.10); }
+  50%       { box-shadow: 0 0 56px rgba(245,158,11,0.22), 0 0 100px rgba(245,158,11,0.06); }
+}
+
+@keyframes orbit {
+  from { transform: rotate(0deg) translateX(120px) rotate(0deg); }
+  to   { transform: rotate(360deg) translateX(120px) rotate(-360deg); }
+}
+
+@keyframes slide-left {
+  from { opacity: 0; transform: translateX(-20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.88); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes progress-line {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+
+/* ── utility ────────────────────────────────────────── */
+
+.fade-up-1  { animation: fade-up 0.65s 0.05s ease both; }
+.fade-up-2  { animation: fade-up 0.65s 0.15s ease both; }
+.fade-up-3  { animation: fade-up 0.65s 0.25s ease both; }
+.fade-up-4  { animation: fade-up 0.65s 0.35s ease both; }
+.fade-up-5  { animation: fade-up 0.65s 0.45s ease both; }
+.fade-up-6  { animation: fade-up 0.65s 0.55s ease both; }
+
+.cursor-blink { animation: blink 1s step-end infinite; }
+
+.gradient-name {
+  background: linear-gradient(100deg, #818cf8 0%, #a78bfa 45%, #67e8f9 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer-text 5s linear infinite;
+}
+
+.card-hover {
+  transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+}
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(99,102,241,0.12), 0 2px 8px rgba(0,0,0,0.5);
+}
+
+/* ── grid background ────────────────────────────────── */
+
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(99,102,241,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99,102,241,0.04) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+
+/* ── nav ────────────────────────────────────────────── */
+
+.nav-link {
+  font-size: 12px;
+  color: #475569;
+  text-decoration: none;
+  letter-spacing: 0.5px;
+  transition: color 0.15s;
+}
+.nav-link:hover { color: #94a3b8; }
+
+/* ── section title ──────────────────────────────────── */
+
+.section-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: #6366f1;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 32px;
+}
+.section-title::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, rgba(99,102,241,0.3), transparent);
 }
