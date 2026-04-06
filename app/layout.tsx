@@ -1,30 +1,22 @@
 import type { Metadata } from "next";
+import { Oswald } from "next/font/google";
 import "./globals.css";
 
+const oswald = Oswald({
+  subsets: ["latin"],
+  variable: "--font-oswald",
+  weight: ["400", "500", "600", "700"],
+});
+
 export const metadata: Metadata = {
-  title: "Yan Machado Nunes — Dev",
-  description: "Desenvolvedor full-stack focado em Next.js, Prisma e PostgreSQL. Estudante de Ciências da Computação.",
+  title: "YAN — Full Stack Developer",
+  description: "Portfolio — Full Stack Developer specializing in Next.js, TypeScript, and modern web applications.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR">
-      <head>
-        <link
-          rel="preconnect"
-          href="https://fonts.googleapis.com"
-        />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body>{children}</body>
+    <html lang="pt-BR" className={oswald.variable}>
+      <body className="bg-[#080808] text-white overflow-x-hidden">{children}</body>
     </html>
   );
 }
