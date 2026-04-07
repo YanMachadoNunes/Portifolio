@@ -5,7 +5,26 @@
   --color-persona-black: #080808;
   --color-persona-gray: #111111;
   --color-persona-gold: #FFD700;
+  /* Sans impacto — títulos P5 */
+  --font-bebas: var(--font-bebas-neue), 'Bebas Neue', sans-serif;
+  /* Serif corpo */
+  --font-lora: var(--font-lora), 'Lora', serif;
+  /* Herança */
   --font-oswald: var(--font-oswald);
+}
+
+/* Nameplate skewed — estilo menu P5 */
+.p5-nameplate {
+  position: relative;
+  overflow: hidden;
+}
+.p5-nameplate::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #E61F1F;
+  transform: skewX(-8deg);
+  transform-origin: left center;
 }
 
 * {

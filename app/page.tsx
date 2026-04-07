@@ -843,8 +843,8 @@ function Hero() {
           ♠ PHANTOM THIEF OF CODE ♠
         </motion.p>
         <motion.h1
-          className="font-black text-white leading-none mb-2"
-          style={{ fontSize: 'clamp(60px, 12vw, 140px)' }}
+          className="text-white leading-none mb-2"
+          style={{ fontSize: 'clamp(60px, 12vw, 140px)', fontFamily: 'var(--font-bebas-neue), "Bebas Neue", sans-serif', letterSpacing: '0.03em' }}
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 3.4, duration: 0.6 }}
@@ -852,8 +852,8 @@ function Hero() {
           YAN
         </motion.h1>
         <motion.h2
-          className="font-black text-[#E61F1F] leading-none mb-8"
-          style={{ fontSize: 'clamp(28px, 5vw, 64px)' }}
+          className="text-[#E61F1F] leading-none mb-8"
+          style={{ fontSize: 'clamp(28px, 5vw, 64px)', fontFamily: 'var(--font-bebas-neue), "Bebas Neue", sans-serif', letterSpacing: '0.06em' }}
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 3.55, duration: 0.6 }}
@@ -861,7 +861,8 @@ function Hero() {
           FULL STACK DEVELOPER
         </motion.h2>
         <motion.p
-          className="text-white/50 font-medium text-lg max-w-lg mb-10 leading-relaxed"
+          className="text-white/50 text-lg max-w-lg mb-10 leading-relaxed"
+          style={{ fontFamily: 'var(--font-lora), "Lora", serif' }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 3.8, duration: 0.6 }}
@@ -967,8 +968,8 @@ function SectionHeading({
         {arcana}
       </motion.p>
       <motion.h2
-        className="font-black text-white leading-none"
-        style={{ fontSize: 'clamp(36px, 6vw, 72px)' }}
+        className="text-white leading-none"
+        style={{ fontSize: 'clamp(36px, 6vw, 72px)', fontFamily: 'var(--font-bebas-neue), "Bebas Neue", sans-serif', letterSpacing: '0.04em' }}
         initial={{ opacity: 0, y: 20 }}
         animate={inView ? { opacity: 1, y: 0 } : {}}
         transition={{ duration: 0.5, delay: 0.1 }}
@@ -977,7 +978,8 @@ function SectionHeading({
       </motion.h2>
       {subtitle && (
         <motion.p
-          className="text-white/40 font-medium mt-4 max-w-2xl"
+          className="text-white/40 mt-4 max-w-2xl"
+          style={{ fontFamily: 'var(--font-lora), "Lora", serif' }}
           initial={{ opacity: 0 }}
           animate={inView ? { opacity: 1 } : {}}
           transition={{ duration: 0.5, delay: 0.25 }}
@@ -1031,17 +1033,17 @@ function About() {
               <span className="text-[#E61F1F] font-bold text-xs tracking-widest uppercase">CONFIDANT PROFILE</span>
             </div>
             <h3 className="text-white font-black text-3xl mb-4">
-              Yan<br /><span className="text-[#E61F1F]">Full Stack Dev</span>
+              Yan Machado Nunes<br /><span className="text-[#E61F1F]">Full Stack Dev</span>
             </h3>
             <p className="text-white/60 leading-relaxed mb-6">
-              Desenvolvedor Full Stack especializado em construir aplicações web escaláveis e de alta performance.
-              Do SaaS de gestão óptica a sistemas de clínicas médicas — transformo ideias complexas em produtos funcionais e elegantes.
+              21 anos. Cursando Ciências da Computação (2º período). Comecei com Java, mas migrei pra Next.js e não olhei mais pra trás.
+              Construo SaaS e sistemas web do zero — do banco de dados ao deploy.
             </p>
             <p className="text-white/60 leading-relaxed">
               Apaixonado por UX/UI, arquitetura limpa e resolver problemas reais com código. Always shipping.
             </p>
             <div className="grid grid-cols-3 gap-4 mt-8">
-              {[['4+', 'ANOS DE EXP'], ['10+', 'PROJETOS'], ['4', 'SAAS APPS']].map(([num, label]) => (
+              {[['3', 'PROJETOS'], ['2', 'SaaS ATIVOS'], ['21', 'ANOS']].map(([num, label]) => (
                 <div key={label} className="text-center">
                   <div className="text-[#E61F1F] font-black text-2xl">{num}</div>
                   <div className="text-white/30 text-xs tracking-wider font-bold">{label}</div>
@@ -1245,9 +1247,20 @@ const PROJECTS = [
     arcanaName: 'THE MAGICIAN',
     type: 'SaaS',
     description: 'Sistema de gestão para óticas com multi-tenancy, planos de assinatura, controle de clientes, estoque, vendas e finanças.',
+    longDescription: 'Plataforma SaaS completa construída para óticas independentes. Cada loja tem seu próprio espaço isolado (multi-tenancy), com planos de assinatura gerenciados pelo MercadoPago. O sistema cobre todo o ciclo operacional: cadastro de clientes, controle de estoque de armações e lentes, registro de vendas, relatórios financeiros e gestão de pedidos de laboratório.',
+    details: [
+      'Multi-tenancy — cada ótica tem dados completamente isolados',
+      'Planos de assinatura com cobrança recorrente via MercadoPago',
+      'Controle de estoque com alertas de reposição',
+      'Dashboard financeiro com relatórios e métricas',
+      'Gestão de clientes com histórico de compras e prescrições',
+    ],
     tech: ['Next.js', 'Prisma', 'PostgreSQL', 'MercadoPago'],
+    github: 'https://github.com/YanMachadoNunes',
+    liveUrl: '',
     suit: '♠',
     stars: 5,
+    featured: true,
   },
   {
     name: 'Flux',
@@ -1255,41 +1268,192 @@ const PROJECTS = [
     arcanaName: 'THE HERMIT',
     type: 'CLINIC SYSTEM',
     description: 'Sistema completo de gestão para clínicas médicas. Server Actions, Zod validation, tema claro/escuro, testes Jest.',
+    longDescription: 'Sistema de gestão hospitalar focado em produtividade. Construído com as melhores práticas de Next.js 15 — Server Actions para mutações, Zod para validação end-to-end e suíte de testes Jest garantindo integridade. Interface com suporte a tema claro/escuro e acessibilidade.',
+    details: [
+      'Server Actions com validação Zod end-to-end',
+      'Agendamento de consultas com calendário interativo',
+      'Prontuário eletrônico por paciente',
+      'Tema claro/escuro com preferência persistida',
+      'Testes unitários e de integração com Jest',
+    ],
     tech: ['Next.js', 'TypeScript', 'PostgreSQL', 'Jest'],
+    github: 'https://github.com/YanMachadoNunes',
+    liveUrl: '',
     suit: '♥',
     stars: 4,
+    featured: false,
   },
   {
-    name: 'Otica E-commerce',
+    name: 'Vapt',
     arcanaNum: 'III',
     arcanaName: 'THE EMPRESS',
-    type: 'E-COMMERCE',
-    description: 'Loja virtual de ótica com catálogo de produtos, carrinho, checkout integrado e painel de gerenciamento.',
-    tech: ['Next.js', 'MongoDB', 'Stripe'],
+    type: 'DELIVERY SaaS',
+    description: 'Plataforma de pedidos para restaurantes com cardápio digital, gestão de pedidos em tempo real e painel multi-tenant.',
+    longDescription: 'SaaS de delivery para restaurantes independentes. Cada estabelecimento gerencia seu próprio cardápio por categorias e produtos, recebe pedidos em tempo real e acompanha o status do ciclo completo — do pedido ao cliente. Supabase Realtime garante atualizações instantâneas sem polling.',
+    details: [
+      'Cardápio digital por restaurante com categorias e produtos',
+      'Pedidos em tempo real via Supabase Realtime',
+      'Ciclo de status: Pendente → Preparando → Entregue',
+      'Painel multi-tenant — cada restaurante vê apenas seus dados',
+      'URL única por estabelecimento (vapt.app/nome-do-restaurante)',
+    ],
+    tech: ['Next.js', 'Prisma', 'Supabase', 'TypeScript'],
+    github: 'https://github.com/YanMachadoNunes',
+    liveUrl: '',
     suit: '♦',
     stars: 4,
-  },
-  {
-    name: 'Malevolent Shrine',
-    arcanaNum: 'IV',
-    arcanaName: 'THE DEVIL',
-    type: '3D VISUALIZER',
-    description: 'Visualizador de áudio 3D em tempo real. Geometria reativa ao som, shaders customizados e síntese de áudio.',
-    tech: ['Three.js', 'React Three Fiber', 'Tone.js'],
-    suit: '♣',
-    stars: 5,
+    featured: false,
   },
 ];
 
-function ProjectCard({ project, delay }: { project: typeof PROJECTS[0]; delay: number }) {
+// ============================================================
+// PROJECT MODAL
+// ============================================================
+function ProjectModal({ project, onClose }: { project: typeof PROJECTS[0]; onClose: () => void }) {
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', h);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', h);
+      document.body.style.overflow = '';
+    };
+  }, [onClose]);
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/80"
+        style={{ backdropFilter: 'blur(4px)' }}
+        onClick={onClose}
+      />
+
+      {/* Panel */}
+      <motion.div
+        className="relative w-full max-w-2xl bg-[#0A0A0A] border border-white/10 overflow-hidden"
+        initial={{ y: 60, opacity: 0, skewY: 2 }}
+        animate={{ y: 0, opacity: 1, skewY: 0 }}
+        exit={{ y: 40, opacity: 0 }}
+        transition={{ type: 'spring', stiffness: 200, damping: 22 }}
+      >
+        {/* Red top bar — skewed P5 style */}
+        <div className="relative bg-[#E61F1F] px-8 py-4 overflow-hidden">
+          <div
+            className="absolute right-0 top-0 bottom-0 w-20 bg-[#0A0A0A]"
+            style={{ transform: 'skewX(-12deg)', transformOrigin: 'right' }}
+          />
+          <div className="relative flex items-center justify-between">
+            <div>
+              <p className="text-white/70 font-bold uppercase" style={{ fontSize: 9, letterSpacing: '0.4em' }}>
+                {project.arcanaNum} — {project.arcanaName}
+              </p>
+              <h2
+                className="text-white leading-none"
+                style={{ fontSize: 'clamp(24px, 4vw, 36px)', fontFamily: 'var(--font-bebas-neue), "Bebas Neue", sans-serif', letterSpacing: '0.05em' }}
+              >
+                {project.name}
+              </h2>
+            </div>
+            <span className="text-white/20 font-black text-5xl select-none">{project.suit}</span>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="px-8 py-6 flex flex-col gap-6">
+          {/* Type + stars */}
+          <div className="flex items-center gap-4">
+            <span className="bg-[#E61F1F] text-white font-black uppercase px-3 py-[3px]" style={{ fontSize: 9, letterSpacing: '0.2em' }}>
+              {project.type}
+            </span>
+            <div className="flex gap-[3px]">
+              {[...Array(5)].map((_, i) => (
+                <span key={i} style={{ fontSize: 13, color: i < project.stars ? '#E61F1F' : 'rgba(255,255,255,0.1)' }}>★</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Long description */}
+          <p className="text-white/60 leading-relaxed" style={{ fontFamily: 'var(--font-lora), "Lora", serif', fontSize: 15 }}>
+            {project.longDescription}
+          </p>
+
+          {/* Details */}
+          <div className="flex flex-col gap-2">
+            <p className="text-[#E61F1F] font-bold uppercase" style={{ fontSize: 10, letterSpacing: '0.4em' }}>FEATURES</p>
+            {project.details.map((d, i) => (
+              <div key={i} className="flex items-start gap-3">
+                <span className="text-[#E61F1F] font-black mt-px shrink-0">▸</span>
+                <span className="text-white/70 text-sm leading-relaxed">{d}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Tech stack */}
+          <div>
+            <p className="text-[#E61F1F] font-bold uppercase mb-3" style={{ fontSize: 10, letterSpacing: '0.4em' }}>STACK</p>
+            <div className="flex flex-wrap gap-2">
+              {project.tech.map(t => (
+                <span key={t} className="tech-tag">{t}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3 pt-2 border-t border-white/5">
+            {project.github && (
+              <a
+                href={project.github}
+                target="_blank"
+                rel="noopener noreferrer"
+                onMouseEnter={() => S.hover()}
+                onClick={() => S.select()}
+                className="border border-white/10 text-white/60 hover:border-[#E61F1F]/50 hover:text-white font-bold tracking-widest px-6 py-3 cut-corner-sm transition-all duration-200 uppercase text-xs"
+              >
+                ★ GITHUB
+              </a>
+            )}
+            {project.liveUrl && (
+              <a
+                href={project.liveUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onMouseEnter={() => S.hover()}
+                onClick={() => S.select()}
+                className="bg-[#E61F1F] text-white hover:bg-white hover:text-[#E61F1F] font-bold tracking-widest px-6 py-3 cut-corner-sm transition-all duration-200 uppercase text-xs"
+              >
+                ♠ VER LIVE →
+              </a>
+            )}
+            <button
+              onClick={onClose}
+              onMouseEnter={() => S.hover()}
+              className="ml-auto border border-white/10 text-white/30 hover:border-white/30 hover:text-white font-bold tracking-widest px-4 py-3 cut-corner-sm transition-all duration-200 text-xs"
+            >
+              ESC
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function ProjectCard({ project, delay, onOpen }: { project: typeof PROJECTS[0]; delay: number; onOpen: () => void }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-40px' });
 
   return (
     <motion.div
       ref={ref}
-      className="relative group select-none"
+      className="relative group select-none cursor-pointer"
       style={{ perspective: 900 }}
+      onClick={() => { S.select(); onOpen(); }}
       initial={{ opacity: 0, y: 70, rotateY: -25 }}
       animate={inView ? { opacity: 1, y: 0, rotateY: 0 } : {}}
       transition={{ duration: 0.7, delay, type: 'spring', stiffness: 85, damping: 14 }}
@@ -1302,10 +1466,20 @@ function ProjectCard({ project, delay }: { project: typeof PROJECTS[0]; delay: n
       }}
       onHoverStart={() => S.cardFlip()}
     >
+      {/* Featured badge */}
+      {project.featured && (
+        <div
+          className="absolute -top-3 left-1/2 z-50 bg-[#E61F1F] text-white font-black uppercase px-3 py-[2px]"
+          style={{ fontSize: 8, letterSpacing: '0.3em', transform: 'translateX(-50%) skewX(-6deg)' }}
+        >
+          ★ PRINCIPAL
+        </div>
+      )}
+
       {/* Drop shadow */}
       <div
         className="absolute bg-[#E61F1F]"
-        style={{ inset: 0, opacity: 0.22, transform: 'translate(7px, 7px)' }}
+        style={{ inset: 0, opacity: project.featured ? 0.35 : 0.22, transform: 'translate(7px, 7px)' }}
       />
 
       {/* Card body — portrait 5:8 */}
@@ -1381,12 +1555,31 @@ function ProjectCard({ project, delay }: { project: typeof PROJECTS[0]; delay: n
               </span>
             ))}
           </div>
-          <h3
-            className="text-white font-black leading-tight transition-colors duration-200 group-hover:text-[#E61F1F]"
-            style={{ fontSize: 'clamp(12px, 2.5vw, 17px)' }}
-          >
-            {project.name}
-          </h3>
+
+          {/* Nameplate — estilo menu Persona 5 */}
+          <div className="relative -mx-3 px-3 py-[3px] overflow-hidden">
+            {/* Fundo inclinado */}
+            <div
+              className="absolute inset-0 bg-[#E61F1F]"
+              style={{ transform: 'skewX(-8deg)', transformOrigin: 'left center' }}
+            />
+            {/* Borda diagonal sobreposta */}
+            <div
+              className="absolute right-0 top-0 bottom-0 w-4 bg-[#080808]"
+              style={{ transform: 'skewX(-8deg)', transformOrigin: 'right center' }}
+            />
+            <h3
+              className="relative text-white font-black leading-tight"
+              style={{
+                fontSize: 'clamp(12px, 2.5vw, 17px)',
+                fontFamily: 'var(--font-bebas-neue), "Bebas Neue", sans-serif',
+                letterSpacing: '0.06em',
+              }}
+            >
+              {project.name}
+            </h3>
+          </div>
+
           <p className="text-white/30 font-bold uppercase" style={{ fontSize: 9, letterSpacing: '0.22em' }}>
             {project.arcanaName}
           </p>
@@ -1394,6 +1587,7 @@ function ProjectCard({ project, delay }: { project: typeof PROJECTS[0]; delay: n
             className="text-white/40 leading-relaxed"
             style={{
               fontSize: 10,
+              fontFamily: 'var(--font-lora), "Lora", serif',
               display: '-webkit-box',
               WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical',
@@ -1430,6 +1624,7 @@ function Projects() {
   const sectionRef = useRef(null);
   const sectionInView = useInView(sectionRef, { once: true, margin: '-150px' });
   const [showAllOut, setShowAllOut] = useState(false);
+  const [activeProject, setActiveProject] = useState<typeof PROJECTS[0] | null>(null);
   const firedRef = useRef(false);
 
   useEffect(() => {
@@ -1442,10 +1637,19 @@ function Projects() {
     }
   }, [sectionInView]);
 
+  const featured = PROJECTS.find(p => p.featured)!;
+  const others = PROJECTS.filter(p => !p.featured);
+
   return (
     <>
       <AnimatePresence>
         {showAllOut && <AllOutAttack onDone={() => setShowAllOut(false)} />}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {activeProject && (
+          <ProjectModal project={activeProject} onClose={() => setActiveProject(null)} />
+        )}
       </AnimatePresence>
 
       <section id="projects" ref={sectionRef} className="py-32 bg-[#0D0D0D] relative overflow-hidden">
@@ -1461,9 +1665,18 @@ function Projects() {
             title="PROJECTS"
             subtitle="Produtos construídos do zero — cada um resolvendo um problema real."
           />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 max-w-4xl mx-auto">
-            {PROJECTS.map((p, i) => (
-              <ProjectCard key={p.name} project={p} delay={i * 0.12} />
+
+          {/* Featured — OptiGestão centrado */}
+          <div className="flex justify-center mb-8">
+            <div style={{ width: 'min(220px, 60vw)' }}>
+              <ProjectCard project={featured} delay={0} onOpen={() => setActiveProject(featured)} />
+            </div>
+          </div>
+
+          {/* Demais projetos */}
+          <div className="grid grid-cols-2 gap-6 md:gap-8 max-w-md mx-auto">
+            {others.map((p, i) => (
+              <ProjectCard key={p.name} project={p} delay={(i + 1) * 0.12} onOpen={() => setActiveProject(p)} />
             ))}
           </div>
           <motion.div
@@ -1474,7 +1687,7 @@ function Projects() {
             transition={{ delay: 0.6 }}
           >
             <a
-              href="https://github.com"
+              href="https://github.com/YanMachadoNunes"
               onMouseEnter={() => S.hover()}
               onClick={() => S.select()}
               className="border border-white/10 text-white/40 hover:border-[#E61F1F]/50 hover:text-white font-bold tracking-widest px-8 py-3 cut-corner-sm transition-all duration-200 uppercase"
@@ -1525,9 +1738,8 @@ function Contact() {
             </p>
             <div className="flex flex-col gap-3">
               {[
-                { label: 'EMAIL',    value: 'yan@example.com',       href: 'mailto:yan@example.com', suit: '♠' },
-                { label: 'GITHUB',   value: 'github.com/yan',         href: '#',                       suit: '♥' },
-                { label: 'LINKEDIN', value: 'linkedin.com/in/yan',    href: '#',                       suit: '♦' },
+                { label: 'EMAIL',  value: 'yanmachado.contato@gmail.com',          href: 'mailto:yanmachado.contato@gmail.com',               suit: '♠' },
+                { label: 'GITHUB', value: 'github.com/YanMachadoNunes',            href: 'https://github.com/YanMachadoNunes',                suit: '♥' },
               ].map(item => (
                 <a
                   key={item.label}
@@ -1564,7 +1776,7 @@ function Contact() {
                 Pronto para transformar sua ideia em produto? Entre em contato e vamos conversar sobre seu próximo projeto.
               </p>
               <a
-                href="mailto:yan@example.com"
+                href="mailto:yanmachado.contato@gmail.com"
                 onMouseEnter={() => S.hover()}
                 onClick={() => S.select()}
                 className="inline-block bg-white text-[#E61F1F] font-black text-sm tracking-widest px-8 py-4 cut-corner hover:bg-[#080808] hover:text-white transition-colors duration-200 uppercase"
