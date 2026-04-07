@@ -1,12 +1,15 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, createContext, useContext } from 'react';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 
 // ============================================================
-// SOUND SYSTEM — Web Audio API singleton
+// SOUND SYSTEM — master gain node for mute/volume control
 // ============================================================
 let _ctx: AudioContext | null = null;
+let _masterGain: GainNode | null = null;
+let _muted = false;
+let _volume = 0.7;
 
 function getCtx(): AudioContext | null {
   if (typeof window === 'undefined') return null;
@@ -18,11 +21,29 @@ function getCtx(): AudioContext | null {
   } catch { return null; }
 }
 
+/** All sounds route through this master gain so mute/volume work globally */
+function dest(c: AudioContext): AudioNode {
+  if (!_masterGain) {
+    _masterGain = c.createGain();
+    _masterGain.gain.value = _muted ? 0 : _volume;
+    _masterGain.connect(c.destination);
+  }
+  return _masterGain;
+}
+
 const S = {
+  setMuted(v: boolean) {
+    _muted = v;
+    if (_masterGain) _masterGain.gain.value = v ? 0 : _volume;
+  },
+  setVolume(v: number) {
+    _volume = v;
+    if (_masterGain && !_muted) _masterGain.gain.value = v;
+  },
   select() {
     const c = getCtx(); if (!c) return;
     const o = c.createOscillator(), g = c.createGain();
-    o.connect(g); g.connect(c.destination);
+    o.connect(g); g.connect(dest(c));
     o.type = 'square';
     o.frequency.setValueAtTime(880, c.currentTime);
     o.frequency.exponentialRampToValueAtTime(440, c.currentTime + 0.07);
@@ -33,7 +54,7 @@ const S = {
   hover() {
     const c = getCtx(); if (!c) return;
     const o = c.createOscillator(), g = c.createGain();
-    o.connect(g); g.connect(c.destination);
+    o.connect(g); g.connect(dest(c));
     o.type = 'square'; o.frequency.value = 1100;
     g.gain.setValueAtTime(0.04, c.currentTime);
     g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.022);
@@ -52,7 +73,7 @@ const S = {
     const g = c.createGain();
     g.gain.setValueAtTime(0.28, c.currentTime);
     g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.22);
-    src.connect(f); f.connect(g); g.connect(c.destination); src.start();
+    src.connect(f); f.connect(g); g.connect(dest(c)); src.start();
   },
   cardFlip() {
     const c = getCtx(); if (!c) return;
@@ -65,14 +86,14 @@ const S = {
       const f = c.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 1800 + off * 2000;
       const g = c.createGain(); const t = c.currentTime + off;
       g.gain.setValueAtTime(0.18, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.055);
-      src.connect(f); f.connect(g); g.connect(c.destination); src.start(t);
+      src.connect(f); f.connect(g); g.connect(dest(c)); src.start(t);
     });
   },
   startup() {
     const c = getCtx(); if (!c) return;
     [220, 330, 440, 660, 880, 1100].forEach((freq, i) => {
       const o = c.createOscillator(), g = c.createGain();
-      o.connect(g); g.connect(c.destination);
+      o.connect(g); g.connect(dest(c));
       o.type = 'square'; o.frequency.value = freq;
       const t = c.currentTime + i * 0.13;
       g.gain.setValueAtTime(0, t);
@@ -81,37 +102,13 @@ const S = {
       o.start(t); o.stop(t + 0.18);
     });
   },
-  allout() {
-    const c = getCtx(); if (!c) return;
-    // Impact boom
-    const len = Math.floor(c.sampleRate * 0.55);
-    const buf = c.createBuffer(1, len, c.sampleRate);
-    const d = buf.getChannelData(0);
-    for (let i = 0; i < len; i++)
-      d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 0.4) * (i < len * 0.08 ? i / (len * 0.08) : 1);
-    const src = c.createBufferSource(); src.buffer = buf;
-    const f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 700;
-    const g = c.createGain(); g.gain.setValueAtTime(0.55, c.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.55);
-    src.connect(f); f.connect(g); g.connect(c.destination); src.start();
-    // Pitch sting
-    const o = c.createOscillator(), go = c.createGain();
-    o.connect(go); go.connect(c.destination);
-    o.type = 'sawtooth';
-    o.frequency.setValueAtTime(900, c.currentTime);
-    o.frequency.exponentialRampToValueAtTime(350, c.currentTime + 0.35);
-    go.gain.setValueAtTime(0.28, c.currentTime);
-    go.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.35);
-    o.start(c.currentTime); o.stop(c.currentTime + 0.35);
-  },
-  // Arpeggio note — one per menu item (index 0-3)
   arpNote(index: number) {
     const c = getCtx(); if (!c) return;
-    const freqs = [330, 392, 440, 523]; // E G A C (minor feel)
+    const freqs = [330, 392, 440, 523];
     const freq = freqs[index % freqs.length];
     const t = c.currentTime + index * 0.055;
     const o = c.createOscillator(), g = c.createGain();
-    o.connect(g); g.connect(c.destination);
+    o.connect(g); g.connect(dest(c));
     o.type = 'square'; o.frequency.value = freq;
     g.gain.setValueAtTime(0, t);
     g.gain.linearRampToValueAtTime(0.09, t + 0.02);
@@ -131,7 +128,7 @@ const S = {
     const g = c.createGain();
     g.gain.setValueAtTime(0.22, c.currentTime);
     g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.18);
-    src.connect(f); f.connect(g); g.connect(c.destination); src.start();
+    src.connect(f); f.connect(g); g.connect(dest(c)); src.start();
   },
 };
 
@@ -141,6 +138,55 @@ if (typeof window !== 'undefined') {
   window.addEventListener('click', boot, { once: true });
   window.addEventListener('keydown', boot, { once: true });
 }
+
+// ============================================================
+// LANGUAGE CONTEXT + TRANSLATIONS
+// ============================================================
+type Lang = 'pt' | 'en';
+
+const TX = {
+  pt: {
+    viewProjects: 'VER PROJETOS →',
+    getInTouch: 'ENTRAR EM CONTATO',
+    heroBio: 'Construindo SaaS, e-commerce e aplicações web de alta performance.\nNext.js · TypeScript · PostgreSQL',
+    aboutBio1: '21 anos. Cursando Ciências da Computação (2º período). Comecei com Java, mas migrei pra Next.js e não olhei mais pra trás.\nConstruo SaaS e sistemas web do zero — do banco de dados ao deploy.',
+    aboutBio2: 'Apaixonado por UX/UI, arquitetura limpa e resolver problemas reais com código. Always shipping.',
+    projectsSubtitle: 'Produtos construídos do zero — cada um resolvendo um problema real.',
+    contactCta: 'Disponível para projetos freelance, consultorias e posições full-time. Se você tem um problema, eu tenho o código.',
+    contactMission: 'ACEITE A MISSÃO',
+    contactBody: 'Pronto para transformar sua ideia em produto? Entre em contato e vamos conversar sobre seu próximo projeto.',
+    startHeist: '♠ START THE HEIST →',
+    hireCta: '♠ START THE HEIST ♠',
+    viewGithub: '♠ VER TODOS NO GITHUB ♠',
+    optionsTitle: 'OPÇÕES',
+    optMute: 'MUDO',
+    optVolume: 'VOLUME',
+    optLang: 'IDIOMA',
+  },
+  en: {
+    viewProjects: 'VIEW PROJECTS →',
+    getInTouch: 'GET IN TOUCH',
+    heroBio: 'Crafting high-performance SaaS, e-commerce & web applications.\nNext.js · TypeScript · PostgreSQL',
+    aboutBio1: '21 years old. Studying Computer Science (2nd semester). Started with Java, switched to Next.js and never looked back.\nI build SaaS and web systems from scratch — from database to deploy.',
+    aboutBio2: 'Passionate about UX/UI, clean architecture and solving real problems with code. Always shipping.',
+    projectsSubtitle: 'Products built from scratch — each one solving a real problem.',
+    contactCta: 'Available for freelance projects, consulting and full-time positions. If you have a problem, I have the code.',
+    contactMission: 'ACCEPT THE MISSION',
+    contactBody: 'Ready to turn your idea into a product? Get in touch and let\'s talk about your next project.',
+    startHeist: '♠ START THE HEIST →',
+    hireCta: '♠ START THE HEIST ♠',
+    viewGithub: '♠ VIEW ALL ON GITHUB ♠',
+    optionsTitle: 'OPTIONS',
+    optMute: 'MUTE',
+    optVolume: 'VOLUME',
+    optLang: 'LANGUAGE',
+  },
+} as const;
+
+const LangCtx = createContext<{ lang: Lang; setLang: (l: Lang) => void }>({
+  lang: 'pt',
+  setLang: () => {},
+});
 
 // ============================================================
 // NOTIFICATION SYSTEM
@@ -318,114 +364,6 @@ function useScramble(text: string, active: boolean) {
 // ============================================================
 // ALL OUT ATTACK CINEMATIC
 // ============================================================
-function AllOutAttack({ onDone }: { onDone: () => void }) {
-  useEffect(() => {
-    S.allout();
-    const t = setTimeout(onDone, 2400);
-    return () => clearTimeout(t);
-  }, [onDone]);
-
-  return (
-    <motion.div
-      className="fixed inset-0 z-[9975] pointer-events-none overflow-hidden"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0, transition: { duration: 0.5 } }}
-    >
-      {/* Red background */}
-      <motion.div
-        className="absolute inset-0 bg-[#E61F1F]"
-        initial={{ scaleX: 0 }}
-        animate={{ scaleX: [0, 1, 1] }}
-        style={{ originX: 0 }}
-        transition={{ duration: 0.25, times: [0, 1, 1] }}
-      />
-      {/* Diagonal black slabs */}
-      <div className="absolute inset-0 bg-[#080808]" style={{ clipPath: 'polygon(0 0, 28% 0, 18% 100%, 0 100%)' }} />
-      <div className="absolute inset-0 bg-[#080808]" style={{ clipPath: 'polygon(72% 0, 100% 0, 100% 100%, 82% 100%)' }} />
-      {/* Scanline overlay */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.12) 3px, rgba(0,0,0,0.12) 6px)',
-        }}
-      />
-      {/* Center content */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
-        <motion.p
-          className="text-white/50 font-bold uppercase tracking-[1em]"
-          style={{ fontSize: 11 }}
-          initial={{ y: -16, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.15 }}
-        >
-          PHANTOM THIEVES
-        </motion.p>
-        <motion.div
-          initial={{ scale: 3, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.2, type: 'spring', stiffness: 280, damping: 16 }}
-        >
-          <h2
-            className="text-white font-black uppercase text-center leading-none"
-            style={{
-              fontSize: 'clamp(44px, 9vw, 104px)',
-              letterSpacing: '0.08em',
-              textShadow: '5px 5px 0 rgba(0,0,0,0.35)',
-            }}
-          >
-            ALL OUT
-          </h2>
-        </motion.div>
-        <motion.div
-          initial={{ scale: 0.2, opacity: 0, rotate: -8 }}
-          animate={{ scale: 1, opacity: 1, rotate: 0 }}
-          transition={{ delay: 0.38, type: 'spring', stiffness: 320, damping: 14 }}
-        >
-          <h2
-            className="font-black uppercase text-center leading-none"
-            style={{
-              fontSize: 'clamp(44px, 9vw, 104px)',
-              letterSpacing: '0.08em',
-              color: 'transparent',
-              WebkitTextStroke: '3px white',
-              textShadow: '5px 5px 0 rgba(0,0,0,0.3)',
-            }}
-          >
-            ATTACK!
-          </h2>
-        </motion.div>
-        {/* Stars */}
-        <motion.div
-          className="flex gap-3 mt-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-        >
-          {['♠', '♥', '♦', '♣', '♠'].map((s, i) => (
-            <motion.span
-              key={i}
-              className="text-white font-black text-2xl"
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.6 + i * 0.06, type: 'spring', stiffness: 300 }}
-            >
-              {s}
-            </motion.span>
-          ))}
-        </motion.div>
-      </div>
-      {/* Fade out overlay */}
-      <motion.div
-        className="absolute inset-0 bg-[#080808]"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.8, duration: 0.5 }}
-      />
-    </motion.div>
-  );
-}
-
 // ============================================================
 // LOADING SCREEN
 // ============================================================
@@ -625,8 +563,17 @@ function MenuNavItem({
   );
 }
 
-function PersonaMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  // Close on Escape
+function PersonaMenu({
+  isOpen, onClose,
+  muted, setMuted, volume, setVolume,
+}: {
+  isOpen: boolean; onClose: () => void;
+  muted: boolean; setMuted: (v: boolean) => void;
+  volume: number; setVolume: (v: number) => void;
+}) {
+  const { lang, setLang } = useContext(LangCtx);
+  const t = TX[lang];
+
   useEffect(() => {
     if (!isOpen) return;
     const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -704,7 +651,72 @@ function PersonaMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
               ))}
             </motion.div>
 
-            {/* Bottom — HIRE ME CTA */}
+            {/* OPTIONS PANEL */}
+            <motion.div
+              className="absolute bottom-24 left-7 right-7"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              {/* Header */}
+              <div className="flex items-center gap-2 mb-3">
+                <div className="h-px flex-1 bg-white/10" />
+                <span className="text-white/30 font-black text-[9px] tracking-[0.4em]">⚙ {t.optionsTitle}</span>
+                <div className="h-px flex-1 bg-white/10" />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                {/* Mute toggle */}
+                <div className="flex items-center justify-between">
+                  <span className="text-white/40 font-bold text-[10px] tracking-widest">
+                    {t.optMute} <span className="text-white/20">[M]</span>
+                  </span>
+                  <button
+                    onClick={() => { const next = !muted; setMuted(next); S.setMuted(next); if (!next) S.hover(); }}
+                    className={`relative w-10 h-5 transition-colors duration-200 cut-corner-sm ${muted ? 'bg-white/10' : 'bg-[#E61F1F]'}`}
+                  >
+                    <div
+                      className={`absolute top-[3px] w-3.5 h-3.5 bg-white transition-all duration-200 ${muted ? 'left-[3px]' : 'left-[calc(100%-17px)]'}`}
+                      style={{ clipPath: 'polygon(2px 0,100% 0,calc(100% - 2px) 100%,0 100%)' }}
+                    />
+                  </button>
+                </div>
+
+                {/* Volume slider */}
+                <div className="flex items-center gap-3">
+                  <span className="text-white/40 font-bold text-[10px] tracking-widest shrink-0">{t.optVolume}</span>
+                  <input
+                    type="range" min={0} max={1} step={0.05}
+                    value={volume}
+                    onChange={e => { const v = parseFloat(e.target.value); setVolume(v); S.setVolume(v); }}
+                    disabled={muted}
+                    className="flex-1 h-[3px] appearance-none bg-white/10 cursor-pointer disabled:opacity-30"
+                    style={{ accentColor: '#E61F1F' }}
+                  />
+                  <span className="text-white/20 font-bold text-[9px] w-6 text-right">{Math.round(volume * 100)}</span>
+                </div>
+
+                {/* Language toggle */}
+                <div className="flex items-center justify-between">
+                  <span className="text-white/40 font-bold text-[10px] tracking-widest">{t.optLang}</span>
+                  <div className="flex">
+                    {(['pt', 'en'] as const).map(l => (
+                      <button
+                        key={l}
+                        onClick={() => { setLang(l); S.select(); }}
+                        className={`px-3 py-[3px] font-black text-[10px] tracking-widest uppercase transition-colors duration-150 first:cut-corner-sm ${
+                          lang === l ? 'bg-[#E61F1F] text-white' : 'bg-white/5 text-white/30 hover:text-white/60'
+                        }`}
+                      >
+                        {l}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Bottom — CTA */}
             <motion.div
               className="absolute bottom-8 left-7 right-7"
               initial={{ opacity: 0, y: 20 }}
@@ -717,7 +729,7 @@ function PersonaMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
                 onMouseEnter={() => S.hover()}
                 className="block bg-[#E61F1F] text-white font-black text-sm tracking-widest text-center py-3 cut-corner hover:bg-white hover:text-[#E61F1F] transition-colors duration-150 uppercase"
               >
-                ♠ START THE HEIST ♠
+                {t.hireCta}
               </a>
             </motion.div>
           </motion.div>
@@ -727,7 +739,12 @@ function PersonaMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
   );
 }
 
-function Navbar() {
+function Navbar({
+  muted, setMuted, volume, setVolume,
+}: {
+  muted: boolean; setMuted: (v: boolean) => void;
+  volume: number; setVolume: (v: number) => void;
+}) {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -742,7 +759,7 @@ function Navbar() {
 
   return (
     <>
-      <PersonaMenu isOpen={menuOpen} onClose={closeMenu} />
+      <PersonaMenu isOpen={menuOpen} onClose={closeMenu} muted={muted} setMuted={setMuted} volume={volume} setVolume={setVolume} />
 
       <motion.nav
         initial={{ y: -80 }}
@@ -798,6 +815,8 @@ function Navbar() {
 // HERO
 // ============================================================
 function Hero() {
+  const { lang } = useContext(LangCtx);
+  const t = TX[lang];
   return (
     <section className="relative min-h-screen bg-[#080808] overflow-hidden flex items-center noise scanlines">
       <SpeedLines />
@@ -867,8 +886,7 @@ function Hero() {
           animate={{ opacity: 1 }}
           transition={{ delay: 3.8, duration: 0.6 }}
         >
-          Crafting high-performance SaaS, e-commerce &amp; web applications.<br />
-          Next.js · TypeScript · PostgreSQL
+          {t.heroBio.split('\n').map((line, i) => <span key={i}>{line}{i === 0 && <br />}</span>)}
         </motion.p>
         <motion.div
           className="flex gap-4 flex-wrap"
@@ -882,7 +900,7 @@ function Hero() {
             onClick={() => S.select()}
             className="bg-[#E61F1F] text-white font-bold text-sm tracking-widest px-8 py-4 cut-corner hover:bg-white hover:text-[#E61F1F] transition-colors duration-200 uppercase"
           >
-            VIEW PROJECTS →
+            {t.viewProjects}
           </a>
           <a
             href="#contact"
@@ -890,7 +908,7 @@ function Hero() {
             onClick={() => S.select()}
             className="border border-white/20 text-white/80 font-bold text-sm tracking-widest px-8 py-4 cut-corner hover:border-[#E61F1F] hover:text-white transition-colors duration-200 uppercase"
           >
-            GET IN TOUCH
+            {t.getInTouch}
           </a>
         </motion.div>
       </div>
@@ -910,25 +928,6 @@ function Hero() {
         ))}
       </div>
 
-      {/* Scroll indicator */}
-      <motion.div
-        className="absolute bottom-8 right-8 flex flex-col items-center gap-2"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 4.6 }}
-      >
-        <motion.div
-          className="w-px h-16 bg-gradient-to-b from-[#E61F1F] to-transparent"
-          animate={{ scaleY: [1, 0.4, 1] }}
-          transition={{ duration: 1.5, repeat: Infinity }}
-        />
-        <span
-          className="text-white/30 font-bold tracking-widest"
-          style={{ fontSize: 10, writingMode: 'vertical-rl' }}
-        >
-          SCROLL
-        </span>
-      </motion.div>
     </section>
   );
 }
@@ -1004,6 +1003,8 @@ function SectionHeading({
 function About() {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-100px' });
+  const { lang } = useContext(LangCtx);
+  const t = TX[lang];
 
   return (
     <section id="about" ref={ref} className="py-32 bg-[#0D0D0D] relative overflow-hidden">
@@ -1036,11 +1037,10 @@ function About() {
               Yan Machado Nunes<br /><span className="text-[#E61F1F]">Full Stack Dev</span>
             </h3>
             <p className="text-white/60 leading-relaxed mb-6">
-              21 anos. Cursando Ciências da Computação (2º período). Comecei com Java, mas migrei pra Next.js e não olhei mais pra trás.
-              Construo SaaS e sistemas web do zero — do banco de dados ao deploy.
+              {t.aboutBio1.split('\n').map((line, i) => <span key={i}>{line}{i === 0 && <br />}</span>)}
             </p>
             <p className="text-white/60 leading-relaxed">
-              Apaixonado por UX/UI, arquitetura limpa e resolver problemas reais com código. Always shipping.
+              {t.aboutBio2}
             </p>
             <div className="grid grid-cols-3 gap-4 mt-8">
               {[['3', 'PROJETOS'], ['2', 'SaaS ATIVOS'], ['21', 'ANOS']].map(([num, label]) => (
@@ -1623,15 +1623,15 @@ function ProjectCard({ project, delay, onOpen }: { project: typeof PROJECTS[0]; 
 function Projects() {
   const sectionRef = useRef(null);
   const sectionInView = useInView(sectionRef, { once: true, margin: '-150px' });
-  const [showAllOut, setShowAllOut] = useState(false);
   const [activeProject, setActiveProject] = useState<typeof PROJECTS[0] | null>(null);
   const firedRef = useRef(false);
+  const { lang } = useContext(LangCtx);
+  const t = TX[lang];
 
   useEffect(() => {
     if (sectionInView && !firedRef.current) {
       firedRef.current = true;
       setTimeout(() => {
-        setShowAllOut(true);
         emitNotif('THE EMPEROR — Arcana III', 'Projects Confidant Unlocked');
       }, 300);
     }
@@ -1642,10 +1642,6 @@ function Projects() {
 
   return (
     <>
-      <AnimatePresence>
-        {showAllOut && <AllOutAttack onDone={() => setShowAllOut(false)} />}
-      </AnimatePresence>
-
       <AnimatePresence>
         {activeProject && (
           <ProjectModal project={activeProject} onClose={() => setActiveProject(null)} />
@@ -1693,7 +1689,7 @@ function Projects() {
               className="border border-white/10 text-white/40 hover:border-[#E61F1F]/50 hover:text-white font-bold tracking-widest px-8 py-3 cut-corner-sm transition-all duration-200 uppercase"
               style={{ fontSize: 12 }}
             >
-              ♠ VIEW ALL ON GITHUB ♠
+              {t.viewGithub}
             </a>
           </motion.div>
         </div>
@@ -1708,6 +1704,8 @@ function Projects() {
 function Contact() {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-100px' });
+  const { lang } = useContext(LangCtx);
+  const t = TX[lang];
 
   return (
     <section id="contact" ref={ref} className="py-32 bg-[#080808] relative overflow-hidden">
@@ -1732,10 +1730,7 @@ function Contact() {
               VAMOS CONSTRUIR<br />
               <span className="text-[#E61F1F]">ALGO JUNTOS?</span>
             </h3>
-            <p className="text-white/50 leading-relaxed mb-8">
-              Disponível para projetos freelance, consultorias e posições full-time.
-              Se você tem um problema, eu tenho o código.
-            </p>
+            <p className="text-white/50 leading-relaxed mb-8">{t.contactCta}</p>
             <div className="flex flex-col gap-3">
               {[
                 { label: 'EMAIL',  value: 'yanmachado.contato@gmail.com',          href: 'mailto:yanmachado.contato@gmail.com',               suit: '♠' },
@@ -1767,21 +1762,19 @@ function Contact() {
             <div className="absolute -right-4 -bottom-4 text-white/10 font-black" style={{ fontSize: 180 }}>♠</div>
             <div className="relative z-10">
               <p className="text-white/70 font-bold uppercase mb-4" style={{ fontSize: 11, letterSpacing: '0.4em' }}>
-                ACEITE A MISSÃO
+                {t.contactMission}
               </p>
               <h4 className="text-white font-black text-4xl mb-6 leading-tight">
                 WILL YOU<br />JOIN US?
               </h4>
-              <p className="text-white/70 text-sm leading-relaxed mb-8">
-                Pronto para transformar sua ideia em produto? Entre em contato e vamos conversar sobre seu próximo projeto.
-              </p>
+              <p className="text-white/70 text-sm leading-relaxed mb-8">{t.contactBody}</p>
               <a
                 href="mailto:yanmachado.contato@gmail.com"
                 onMouseEnter={() => S.hover()}
                 onClick={() => S.select()}
                 className="inline-block bg-white text-[#E61F1F] font-black text-sm tracking-widest px-8 py-4 cut-corner hover:bg-[#080808] hover:text-white transition-colors duration-200 uppercase"
               >
-                START THE HEIST →
+                {t.startHeist}
               </a>
             </div>
           </motion.div>
@@ -1828,6 +1821,25 @@ function Footer() {
 export default function Page() {
   const [loading, setLoading] = useState(true);
   const [notifs, setNotifs] = useState<Notif[]>([]);
+  const [lang, setLang] = useState<Lang>('pt');
+  const [muted, setMuted] = useState(false);
+  const [volume, setVolume] = useState(0.7);
+
+  // Atalho M — mute/unmute
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => {
+      if (e.key === 'm' || e.key === 'M') {
+        if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+        setMuted(prev => {
+          const next = !prev;
+          S.setMuted(next);
+          return next;
+        });
+      }
+    };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, []);
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -1839,7 +1851,7 @@ export default function Page() {
   }, []);
 
   return (
-    <>
+    <LangCtx.Provider value={{ lang, setLang }}>
       {/* Always-on cursor */}
       <CustomCursor />
 
@@ -1862,7 +1874,7 @@ export default function Page() {
 
       {!loading && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
-          <Navbar />
+          <Navbar muted={muted} setMuted={setMuted} volume={volume} setVolume={setVolume} />
           <Hero />
           <About />
           <Skills />
@@ -1871,6 +1883,6 @@ export default function Page() {
           <Footer />
         </motion.div>
       )}
-    </>
+    </LangCtx.Provider>
   );
 }
